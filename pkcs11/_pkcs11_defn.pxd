@@ -1,3 +1,4 @@
+# cython: language_level=3
 """
 Definitions imported from PKCS11 C headers.
 """
@@ -150,6 +151,8 @@ cdef extern from '../extern/cryptoki.h':
     cdef enum:  # CK_FLAGS
         CKF_RW_SESSION,
         CKF_SERIAL_SESSION,
+        CKF_LIBRARY_CANT_CREATE_OS_THREADS,
+        CKF_OS_LOCKING_OK,
 
     cdef enum:  # CKZ
         CKZ_DATA_SPECIFIED,
@@ -160,6 +163,14 @@ cdef extern from '../extern/cryptoki.h':
         CKS_RW_PUBLIC_SESSION,
         CKS_RW_USER_FUNCTIONS,
         CKS_RW_SO_FUNCTIONS
+
+    ctypedef struct CK_C_INITIALIZE_ARGS:
+        void **CreateMutex
+        void **DestroyMutex
+        void **LockMutex
+        void **UnlockMutex
+        CK_FLAGS flags
+        void *pReserved
 
     ctypedef struct CK_VERSION:
         CK_BYTE major
@@ -206,6 +217,12 @@ cdef extern from '../extern/cryptoki.h':
         CK_VERSION hardwareVersion
         CK_VERSION firmwareVersion
         CK_CHAR utcTime[16]
+
+    ctypedef struct CK_SESSION_INFO:
+        CK_SLOT_ID slotID
+        CK_STATE state
+        CK_FLAGS flags
+        CK_ULONG ulDeviceError
 
     ctypedef struct CK_SESSION_INFO:
         CK_SLOT_ID slotID
@@ -562,8 +579,18 @@ cdef extern from '../extern/cryptoki.h':
                                  CK_SLOT_ID *slot,
                                  void *pRserved)
 
+cdef extern from '../extern/nss.h':
+
+    ctypedef struct CK_C_INITIALIZE_NSS_ARGS:
+        void **CreateMutex
+        void **DestroyMutex
+        void **LockMutex
+        void **UnlockMutex
+        CK_FLAGS flags
+        CK_CHAR *LibraryParameters
+        void *pReserved
+
 # The only external API call that must be defined in a PKCS#11 library
 # All other APIs are taken from the CK_FUNCTION_LIST table
 ctypedef CK_RV (*C_GetFunctionList_ptr) (CK_FUNCTION_LIST **)
-
 

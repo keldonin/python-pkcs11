@@ -12,7 +12,7 @@ _so = None
 _lib = None
 
 
-def lib(so):
+def lib(so, nssdir=None):
     """
     Wrap the main library call coming from Cython with a preemptive
     dynamic loading.
@@ -29,7 +29,7 @@ def lib(so):
 
     from . import _pkcs11
 
-    _lib = _pkcs11.lib(so)
+    _lib = _pkcs11.lib(so,nssdir=nssdir)
     _so = so
 
     return _lib

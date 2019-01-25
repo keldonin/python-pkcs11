@@ -1212,8 +1212,8 @@ cdef class lib:
             if C_GetFunctionList == NULL:
                 raise RuntimeError("{} is not a PKCS#11 library: {}".format(so, dlfcn.dlerror()))
 
-        assertRV(C_GetFunctionList(&_funclist))
 
+        assertRV(C_GetFunctionList(&_funclist))
 
     cdef _unload_pkcs11_lib(self):
         """Unload a PKCS#11 library.
@@ -1231,12 +1231,29 @@ cdef class lib:
             if self._handle != NULL:
                 dlfcn.dlclose(self._handle)
 
-    def __cinit__(self, so):
+    def __cinit__(self, so, *, nssdir=None):
         self._load_pkcs11_lib(so)
         # at this point, _funclist contains all function pointers to the library
-        assertRV(_funclist.C_Initialize(NULL))
+        cdef CK_CHAR *libparams
+        cdef CK_C_INITIALIZE_NSS_ARGS init_nss
 
-    def __init__(self, so):
+        if nssdir is not None:
+            nssconfig = "configdir='{}'".format(nssdir)
+            configstring = nssconfig.encode('ascii')
+            libparams = configstring # python <str> to C <char *>
+
+            init_nss.CreateMutex = NULL
+            init_nss.DestroyMutex = NULL
+            init_nss.LockMutex = NULL
+            init_nss.UnlockMutex = NULL
+            init_nss.flags = CKF_OS_LOCKING_OK
+            init_nss.LibraryParameters = libparams
+            assertRV(_funclist.C_Initialize(&init_nss))
+        else:
+            assertRV(_funclist.C_Initialize(NULL))
+
+
+    def __init__(self, so, *, nssdir=None):
         self.so = so
         cdef CK_INFO info
         assertRV(_funclist.C_GetInfo(&info))
@@ -1293,6 +1310,7 @@ cdef class lib:
             slots.append(Slot(self, slotID, **info))
 
         return slots
+
 
 
     def get_tokens(self,
