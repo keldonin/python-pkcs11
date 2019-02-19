@@ -27,6 +27,10 @@ before_install:
     - (cd softhsm-2.3.0 && ./configure --prefix=$HOME --disable-p11-kit && make all install CC="ccache gcc" CXX="ccache g++")
 
 before_script:
+    # Initialise a token on NSS
+    - modutil -dbdir sql:. -force -create
+    - modutil -dbdir sql:. -force -changepw "NSS Certificate DB" -newpwfile <( echo "ch@nge1t" )
+    - ls -l
     # Initialise a token on the SoftHSM
     - $HOME/bin/softhsm2-util --init-token --free --label TEST --pin 1234 --so-pin 5678
     # Build our extension
