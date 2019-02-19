@@ -5,6 +5,7 @@ python:
     - '3.4'
     - '3.5'
     - '3.6'
+    - '3.7'
 
 env:
     global:
@@ -23,6 +24,9 @@ before_install:
     # Install SoftHSMv2
     - curl https://dist.opendnssec.org/source/softhsm-2.3.0.tar.gz | tar -zxv
     - (cd softhsm-2.3.0 && ./configure --prefix=$HOME --disable-p11-kit && make all install CC="ccache gcc" CXX="ccache g++")
+    # Install NSS
+    - apt-get update
+    - apt-get install libnss3-tools
 
 before_script:
     # Initialise a token on the SoftHSM
